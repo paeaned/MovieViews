@@ -1,0 +1,104 @@
+﻿<Window x:Class="MovieViews.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MovieViews"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <StackPanel>
+        <DockPanel Height="34">
+            <Button Content="◀" Width="30" Height="30"
+                    Command="{Binding PreDateCommand}">
+            </Button>
+            <Button Content="▶" Width="30" Height="30"
+                    Command="{Binding NextDateCommand}">
+            </Button>
+            <TextBox Background="LightGray" Width="350" Height="30" Margin="15,2,0,2" 
+                     IsReadOnly="True" 
+                     FontFamily="휴먼굵은팸체" 
+                     FontSize="18"
+                     Text="{Binding CuDate}" HorizontalAlignment="Left">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+        </DockPanel>
+        <DataGrid x:Name="dataGrid" Grid.Row="0" 
+                  AutoGenerateColumns="False"
+                  ItemsSource="{Binding Movies}" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="순위" Width="1*"
+                                    Binding="{Binding Num}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="영화 제목" Width="5*"
+                                    Binding="{Binding Name}"></DataGridTextColumn>
+                <DataGridTextColumn Header="개봉일" Width="3*"
+                                    Binding="{Binding ODate}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="총 매출액" Width="3*" 
+                                    Binding="{Binding TEarn, ConverterCulture='ko-KR', StringFormat=c}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="점유율" Width="1.5*"
+                                    Binding="{Binding Pct}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="누적 관객수" Width="2.5*"
+                                    Binding="{Binding TAud, StringFormat={}{0:N0}}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
+</Window>
