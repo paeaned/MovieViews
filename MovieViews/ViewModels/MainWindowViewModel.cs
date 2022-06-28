@@ -33,13 +33,11 @@ namespace MovieViews.ViewModels
         static string ApiKey = "";
 
         /// <summary>
-        /// API 연동주소 생성 메소드
+        /// 영화 ApiKey 추출부분
         /// </summary>
-        /// <param name="Date"></param>
         /// <returns></returns>
-        static string RequestURL(string Date)
+        static string RequestApiKey()
         {
-            #region ApiKey 가져오기
             string keyuri = @"..\..\ApiKey.xml";
 
             try
@@ -54,7 +52,17 @@ namespace MovieViews.ViewModels
             {
                 Console.WriteLine(ex.Message);
             }
-            #endregion
+            return ApiKey;
+        }
+        
+        /// <summary>
+        /// API 연동주소 생성 메소드
+        /// </summary>
+        /// <param name="Date"></param>
+        /// <returns></returns>
+        static string RequestURL(string Date)
+        {
+            ApiKey = RequestApiKey();
 
             string result = string.Format("https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key={0}&targetDt={1}", ApiKey, Date);
             return result;
