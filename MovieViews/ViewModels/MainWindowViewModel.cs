@@ -172,14 +172,8 @@ namespace MovieViews.ViewModels
                             var obj = JObject.Parse(data);
 
                             MvJson = Convert.ToString(obj);
-
-                            /// <summary>
-                            /// API에서 가져온 JSON 데이터를 파싱해서 영화 정보를 모델리스트에 추가하는 부분
-                            /// </summary>
-                            var boxOfficeResult = obj["boxOfficeResult"];
-                            var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
-
-                            if (dailyBoxOfficeList.Count() == 0)
+                            
+                            if (obj["boxOfficeResult"]["dailyBoxOfficeList"].Count() == 0)
                             {
                                 MessageBox.Show("영화 정보가 없습니다.");
                             } else
@@ -192,26 +186,10 @@ namespace MovieViews.ViewModels
                                     date = Date,
                                     log = MvJson
                                 };
-
                                 context.Movies_Logs.Add(Movies_Log);
                                 context.SaveChanges();
 
-                                foreach (var item in dailyBoxOfficeList)
-                                {
-                                    long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                                    double coPct = Convert.ToDouble(item["salesShare"]);
-                                    long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                                    Movies.Add(new MovieModel()
-                                    {
-                                        Num = (int)item["rank"],
-                                        Name = (string)item["movieNm"],
-                                        ODate = (string)item["openDt"],
-                                        TEarn = coTEarn,
-                                        Pct = coPct,
-                                        TAud = coTAud
-                                    });
-                                }
+                                AddMovieModel(obj);
                             }
                         }
                     }
@@ -223,25 +201,7 @@ namespace MovieViews.ViewModels
                         var data = log.ToList()[0].log;
                         var obj = JObject.Parse((string)data);
 
-                        var boxOfficeResult = obj["boxOfficeResult"];
-                        var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
-
-                        foreach (var item in dailyBoxOfficeList)
-                        {
-                            long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                            double coPct = Convert.ToDouble(item["salesShare"]);
-                            long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                            Movies.Add(new MovieModel()
-                            {
-                                Num = (int)item["rank"],
-                                Name = (string)item["movieNm"],
-                                ODate = (string)item["openDt"],
-                                TEarn = coTEarn,
-                                Pct = coPct,
-                                TAud = coTAud
-                            });
-                        }
+                        AddMovieModel(obj);
                     }
                 }
                 #region SQL 버전
@@ -425,6 +385,32 @@ namespace MovieViews.ViewModels
         {
             string result = DateTime.ParseExact(Date, "yyyyMMdd", null).ToString("yyyy년 MM월 dd일 박스오피스");
             return result;
+        }
+
+        /// <summary>
+        /// JObject에서 필요한 정보만 빼서 모델에 추가하는 기능
+        /// </summary>
+        private void AddMovieModel(JObject obj)
+        {
+            var boxOfficeResult = obj["boxOfficeResult"];
+            var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
+
+            foreach (var item in dailyBoxOfficeList)
+            {
+                long coTEarn = Convert.ToInt64(item["salesAcc"]);
+                double coPct = Convert.ToDouble(item["salesShare"]);
+                long coTAud = Convert.ToInt64(item["audiAcc"]);
+
+                Movies.Add(new MovieModel()
+                {
+                    Num = (int)item["rank"],
+                    Name = (string)item["movieNm"],
+                    ODate = (string)item["openDt"],
+                    TEarn = coTEarn,
+                    Pct = coPct,
+                    TAud = coTAud
+                });
+            }
         }
     }   
 }
