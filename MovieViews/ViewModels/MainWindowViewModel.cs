@@ -16,18 +16,18 @@ namespace MovieViews.ViewModels
 
     public class MainWindowViewModel : Notifier
     {
-        /// <summary>
-        /// DB연결 부분
-        /// </summary>
+        ///// <summary>
+        ///// DB연결 부분
+        ///// </summary>
         #region DbConnection
-        DataSet ds;
-        string MvJson;
-        string constr = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MvvmMovieViews.Data;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+        //DataSet ds;
+        //string constr = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MvvmMovieViews.Data;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
         #endregion
 
         /// <summary>
         /// 초기 날짜 설정 (오늘의 전날)
         /// </summary>
+        string MvJson;
         static DateTime now = DateTime.Now;
         static string Date = now.AddDays(-1).ToString("yyyyMMdd");
 
@@ -125,80 +125,50 @@ namespace MovieViews.ViewModels
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(constr))
+                /// <summary>
+                /// Linq 사용해서 DB와 연결 >> .ToList() 안하면 쌩 쿼리문이 날아옴
+                /// </summary>
+                using (var context = new MoviesViewEntities())
                 {
-                    conn.Open();
+                    /// <summary>
+                    /// SQL 버전 > .ToList() 쓴 다음에 꺼내쓸때 log[0].log 요런식으로 사용
+                    /// </summary>
+                    var log = from x in context.Movies_Logs
+                                where x.date == Date
+                                select x;
+
 
                     /// <summary>
-                    /// Linq 사용해서 DB와 연결 >> .ToList() 안하면 쌩 쿼리문이 날아옴
+                    /// 람다 버전 > 꺼내는 방법 동일
                     /// </summary>
-                    using (var context = new MoviesViewEntities())
+                    // var logs = context.Movies_Logs
+                    //     .Where(x => x.date == Date)
+                    //     .ToList();
+
+                    /// <summary>
+                    /// Count()를 쓰려면 ToList() 쓰면 안됨
+                    /// </summary>
+                    if (log.Count() == 0)
                     {
-                        /// <summary>
-                        /// SQL 버전 > 꺼내쓰기 log[0].log 요런식으로 사용
-                        /// </summary>
-                        var log = from x in context.Movies_Logs
-                                  where x.date == Date
-                                  select x;
+                        WebRequest request = WebRequest.Create(RequestURL(Date));
+                        request.Method = "GET";
+                        request.ContentType = "application/json";
 
-
-                        /// <summary>
-                        /// 람다 버전 > 꺼내는 방법 동일
-                        /// </summary>
-                        // var logs = context.Movies_Logs
-                        //     .Where(x => x.date == Date)
-                        //     .ToList();
-
-                        /// <summary>
-                        /// Count()를 쓰려면 ToList() 쓰면 안됨
-                        /// </summary>
-                        if (log.Count() == 0)
+                        using (WebResponse response = request.GetResponse())
+                        using (Stream stream = response.GetResponseStream())
+                        using (StreamReader reader = new StreamReader(stream))
                         {
-                            WebRequest request = WebRequest.Create(RequestURL(Date));
-                            request.Method = "GET";
-                            request.ContentType = "application/json";
+                            string data = reader.ReadToEnd();
+                            var obj = JObject.Parse(data);
 
-                            using (WebResponse response = request.GetResponse())
-                            using (Stream stream = response.GetResponseStream())
-                            using (StreamReader reader = new StreamReader(stream))
-                            {
-                                string data = reader.ReadToEnd();
-                                var obj = JObject.Parse(data);
+                            MvJson = Convert.ToString(obj);
 
-                                MvJson = Convert.ToString(obj);
+                            var Movies_Log = new Movies_Logs();
+                            Movies_Log.date = Date;
+                            Movies_Log.log = MvJson;
 
-                                var Movies_Log = new Movies_Logs();
-                                Movies_Log.date = Date;
-                                Movies_Log.log = MvJson;
-
-                                context.Movies_Logs.Add(Movies_Log);
-                                context.SaveChanges();
-
-                                var boxOfficeResult = obj["boxOfficeResult"];
-                                var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
-
-                                foreach (var item in dailyBoxOfficeList)
-                                {
-                                    long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                                    double coPct = Convert.ToDouble(item["salesShare"]);
-                                    long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                                    Movies.Add(new MovieModel()
-                                    {
-                                        Num = (int)item["rank"],
-                                        Name = (string)item["movieNm"],
-                                        ODate = (string)item["openDt"],
-                                        TEarn = coTEarn,
-                                        Pct = coPct,
-                                        TAud = coTAud
-                                    });
-                                }
-                            }
-                        }
-                        else
-                        {
-                            var data = log.ToList()[0].log;
-                            var obj = JObject.Parse((string)data);
+                            context.Movies_Logs.Add(Movies_Log);
+                            context.SaveChanges();
 
                             var boxOfficeResult = obj["boxOfficeResult"];
                             var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
@@ -221,89 +191,118 @@ namespace MovieViews.ViewModels
                             }
                         }
                     }
+                    else
+                    {
+                        var data = log.ToList()[0].log;
+                        var obj = JObject.Parse((string)data);
 
-                    #region SQL 버전
-                    //using (SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM [dbo].[Movies.Logs] WHERE date = @_date", conn))
-                    //{
-                    //    adapter.SelectCommand.Parameters.AddWithValue("@_date", Date);
-                    //    ds = new DataSet();
-                    //    adapter.Fill(ds);
+                        var boxOfficeResult = obj["boxOfficeResult"];
+                        var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
 
-                    //    if (ds.Tables[0].Rows.Count == 0)
-                    //    {
-                    //        WebRequest request = WebRequest.Create(RequestURL(Date));
-                    //        request.Method = "GET";
-                    //        request.ContentType = "application/json";
+                        foreach (var item in dailyBoxOfficeList)
+                        {
+                            long coTEarn = Convert.ToInt64(item["salesAcc"]);
+                            double coPct = Convert.ToDouble(item["salesShare"]);
+                            long coTAud = Convert.ToInt64(item["audiAcc"]);
 
-                    //        using (WebResponse response = request.GetResponse())
-                    //        using (Stream stream = response.GetResponseStream())
-                    //        using (StreamReader reader = new StreamReader(stream))
-                    //        {
-                    //            string data = reader.ReadToEnd();
-                    //            var obj = JObject.Parse(data);
-
-                    //            MvJson = Convert.ToString(obj);
-                    //            using (SqlCommand cmd = new SqlCommand("INSERT INTO [dbo].[Movies.Logs] VALUES (@_date, @_log)", conn))
-                    //            {
-                    //                cmd.Parameters.AddWithValue("@_date", Date);
-                    //                cmd.Parameters.AddWithValue("@_log", MvJson);
-                    //                cmd.ExecuteNonQuery();
-                    //            }
-
-                    //            conn.Close();
-
-                    //            var boxOfficeResult = obj["boxOfficeResult"];
-                    //            var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
-
-                    //            foreach (var item in dailyBoxOfficeList)
-                    //            {
-                    //                long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                    //                double coPct = Convert.ToDouble(item["salesShare"]);
-                    //                long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                    //                Movies.Add(new MovieModel()
-                    //                {
-                    //                    Num = (int)item["rank"],
-                    //                    Name = (string)item["movieNm"],
-                    //                    ODate = (string)item["openDt"],
-                    //                    TEarn = coTEarn,
-                    //                    Pct = coPct,
-                    //                    TAud = coTAud
-                    //                });
-                    //            }
-                    //        }
-                    //    } else
-                    //    {
-                    //        conn.Close();
-
-                    //        DataTable dt = ds.Tables[0];
-
-                    //        var data = dt.Rows[0][2];
-                    //        var obj = JObject.Parse((string)data);
-
-                    //        var boxOfficeResult = obj["boxOfficeResult"];
-                    //        var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
-
-                    //        foreach (var item in dailyBoxOfficeList)
-                    //        {
-                    //            long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                    //            double coPct = Convert.ToDouble(item["salesShare"]);
-                    //            long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                    //            Movies.Add(new MovieModel()
-                    //            {
-                    //                Num = (int)item["rank"],
-                    //                Name = (string)item["movieNm"],
-                    //                ODate = (string)item["openDt"],
-                    //                TEarn = coTEarn,
-                    //                Pct = coPct,
-                    //                TAud = coTAud
-                    //            });
-                    //        }
-                    //    }
-                    //}
-                    #endregion
+                            Movies.Add(new MovieModel()
+                            {
+                                Num = (int)item["rank"],
+                                Name = (string)item["movieNm"],
+                                ODate = (string)item["openDt"],
+                                TEarn = coTEarn,
+                                Pct = coPct,
+                                TAud = coTAud
+                            });
+                        }
+                    }
                 }
+                #region SQL 버전
+                //using (SqlConnection conn = new SqlConnection(constr))
+                //{
+                //    conn.Open();
+                //    using (SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM [dbo].[Movies.Logs] WHERE date = @_date", conn))
+                //    {
+                //        adapter.SelectCommand.Parameters.AddWithValue("@_date", Date);
+                //        ds = new DataSet();
+                //        adapter.Fill(ds);
+
+                //        if (ds.Tables[0].Rows.Count == 0)
+                //        {
+                //            WebRequest request = WebRequest.Create(RequestURL(Date));
+                //            request.Method = "GET";
+                //            request.ContentType = "application/json";
+
+                //            using (WebResponse response = request.GetResponse())
+                //            using (Stream stream = response.GetResponseStream())
+                //            using (StreamReader reader = new StreamReader(stream))
+                //            {
+                //                string data = reader.ReadToEnd();
+                //                var obj = JObject.Parse(data);
+
+                //                MvJson = Convert.ToString(obj);
+                //                using (SqlCommand cmd = new SqlCommand("INSERT INTO [dbo].[Movies.Logs] VALUES (@_date, @_log)", conn))
+                //                {
+                //                    cmd.Parameters.AddWithValue("@_date", Date);
+                //                    cmd.Parameters.AddWithValue("@_log", MvJson);
+                //                    cmd.ExecuteNonQuery();
+                //                }
+
+                //                conn.Close();
+
+                //                var boxOfficeResult = obj["boxOfficeResult"];
+                //                var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
+
+                //                foreach (var item in dailyBoxOfficeList)
+                //                {
+                //                    long coTEarn = Convert.ToInt64(item["salesAcc"]);
+                //                    double coPct = Convert.ToDouble(item["salesShare"]);
+                //                    long coTAud = Convert.ToInt64(item["audiAcc"]);
+
+                //                    Movies.Add(new MovieModel()
+                //                    {
+                //                        Num = (int)item["rank"],
+                //                        Name = (string)item["movieNm"],
+                //                        ODate = (string)item["openDt"],
+                //                        TEarn = coTEarn,
+                //                        Pct = coPct,
+                //                        TAud = coTAud
+                //                    });
+                //                }
+                //            }
+                //        }
+                //        else
+                //        {
+                //            conn.Close();
+
+                //            DataTable dt = ds.Tables[0];
+
+                //            var data = dt.Rows[0][2];
+                //            var obj = JObject.Parse((string)data);
+
+                //            var boxOfficeResult = obj["boxOfficeResult"];
+                //            var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
+
+                //            foreach (var item in dailyBoxOfficeList)
+                //            {
+                //                long coTEarn = Convert.ToInt64(item["salesAcc"]);
+                //                double coPct = Convert.ToDouble(item["salesShare"]);
+                //                long coTAud = Convert.ToInt64(item["audiAcc"]);
+
+                //                Movies.Add(new MovieModel()
+                //                {
+                //                    Num = (int)item["rank"],
+                //                    Name = (string)item["movieNm"],
+                //                    ODate = (string)item["openDt"],
+                //                    TEarn = coTEarn,
+                //                    Pct = coPct,
+                //                    TAud = coTAud
+                //                });
+                //            }
+                //        }
+                //    }
+                //}
+                #endregion
 
                 #region 해당 날짜 영화정보 추가 (// 수정전)
                 //WebRequest request = WebRequest.Create(RequestURL(Date));
