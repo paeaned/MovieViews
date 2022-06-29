@@ -163,12 +163,17 @@ namespace MovieViews.ViewModels
 
                             MvJson = Convert.ToString(obj);
 
-                            var Movies_Log = new Movies_Logs();
-                            Movies_Log.date = Date;
-                            Movies_Log.log = MvJson;
+                            /// <summary>
+                            /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행
+                            var Movies_Log = new Movies_Logs
+                            {
+                                date = Date,
+                                log = MvJson
+                            };
 
                             context.Movies_Logs.Add(Movies_Log);
                             context.SaveChanges();
+                            /// </summary>
 
                             var boxOfficeResult = obj["boxOfficeResult"];
                             var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
