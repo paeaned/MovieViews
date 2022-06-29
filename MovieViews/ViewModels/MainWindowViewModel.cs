@@ -65,7 +65,7 @@ namespace MovieViews.ViewModels
         {
             ApiKey = RequestApiKey();
 
-            string result = string.Format("https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key={0}&targetDt={1}", ApiKey, Date);
+            string result = $"https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key={ApiKey}&targetDt={Date}";
             return result;
         }
 
@@ -150,6 +150,9 @@ namespace MovieViews.ViewModels
                     /// </summary>
                     if (log.Count() == 0)
                     {
+                        /// <summary>
+                        /// API에서 JSON 데이터 뽑아오는 부분
+                        /// </summary>
                         WebRequest request = WebRequest.Create(RequestURL(Date));
                         request.Method = "GET";
                         request.ContentType = "application/json";
@@ -164,7 +167,8 @@ namespace MovieViews.ViewModels
                             MvJson = Convert.ToString(obj);
 
                             /// <summary>
-                            /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행
+                            /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행하는 부분
+                            /// </summary>
                             var Movies_Log = new Movies_Logs
                             {
                                 date = Date,
@@ -173,8 +177,10 @@ namespace MovieViews.ViewModels
 
                             context.Movies_Logs.Add(Movies_Log);
                             context.SaveChanges();
-                            /// </summary>
 
+                            /// <summary>
+                            /// API에서 가져온 JSON 데이터를 파싱해서 영화 정보를 모델리스트에 추가하는 부분
+                            /// </summary>
                             var boxOfficeResult = obj["boxOfficeResult"];
                             var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
 
@@ -198,6 +204,9 @@ namespace MovieViews.ViewModels
                     }
                     else
                     {
+                        /// <summary>
+                        /// DB에서 가저온 데이터를 파싱해서 영화 정보를 모델리스트에 추가하는 부분
+                        /// </summary>
                         var data = log.ToList()[0].log;
                         var obj = JObject.Parse((string)data);
 
@@ -347,6 +356,9 @@ namespace MovieViews.ViewModels
             }
         }
 
+        /// <summary>
+        /// 전날 영화 정보 요청하는 기능
+        /// </summary>
         private ICommand preDateCommand;
         public ICommand PreDateCommand
         {
@@ -367,6 +379,9 @@ namespace MovieViews.ViewModels
             AddMovie();
         }
 
+        /// <summary>
+        /// 다음날 영화 정보 요청하는 기능
+        /// </summary>
         private ICommand nextDateCommand;
         public ICommand NextDateCommand
         {
@@ -387,6 +402,11 @@ namespace MovieViews.ViewModels
             AddMovie();
         }
 
+        /// <summary>
+        /// 요청한 날의 박스오피스 날짜 string 포맷팅하는 부분
+        /// </summary>
+        /// <param name="Date"></param>
+        /// <returns></returns>
         private string ChangeDate(string Date)
         {
             string result = DateTime.ParseExact(Date, "yyyyMMdd", null).ToString("yyyy년 MM월 dd일 박스오피스");
