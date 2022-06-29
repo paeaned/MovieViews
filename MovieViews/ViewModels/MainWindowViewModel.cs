@@ -10,15 +10,16 @@ using System.Data.SqlClient;
 using System.Xml;
 using System.Xml.Linq;
 using System.Linq;
+using System.Windows;
 
 namespace MovieViews.ViewModels
 {
 
     public class MainWindowViewModel : Notifier
     {
-        ///// <summary>
-        ///// DB연결 부분
-        ///// </summary>
+        /// <summary>
+        /// DB연결 부분
+        /// </summary>
         #region DbConnection
         //DataSet ds;
         //string constr = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=MvvmMovieViews.Data;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
@@ -54,6 +55,12 @@ namespace MovieViews.ViewModels
                 Console.WriteLine(ex.Message);
             }
             return ApiKey;
+        }
+
+        static int CalDate(DateTime newDate)
+        {
+            int result = DateTime.Compare(DateTime.Now, newDate);
+            return result;
         }
         
         /// <summary>
@@ -167,38 +174,44 @@ namespace MovieViews.ViewModels
                             MvJson = Convert.ToString(obj);
 
                             /// <summary>
-                            /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행하는 부분
-                            /// </summary>
-                            var Movies_Log = new Movies_Logs
-                            {
-                                date = Date,
-                                log = MvJson
-                            };
-
-                            context.Movies_Logs.Add(Movies_Log);
-                            context.SaveChanges();
-
-                            /// <summary>
                             /// API에서 가져온 JSON 데이터를 파싱해서 영화 정보를 모델리스트에 추가하는 부분
                             /// </summary>
                             var boxOfficeResult = obj["boxOfficeResult"];
                             var dailyBoxOfficeList = boxOfficeResult["dailyBoxOfficeList"];
 
-                            foreach (var item in dailyBoxOfficeList)
+                            if (dailyBoxOfficeList.Count() == 0)
                             {
-                                long coTEarn = Convert.ToInt64(item["salesAcc"]);
-                                double coPct = Convert.ToDouble(item["salesShare"]);
-                                long coTAud = Convert.ToInt64(item["audiAcc"]);
-
-                                Movies.Add(new MovieModel()
+                                MessageBox.Show("영화 정보가 없습니다.");
+                            } else
+                            {
+                                /// <summary>
+                                /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행하는 부분
+                                /// </summary>
+                                var Movies_Log = new Movies_Logs
                                 {
-                                    Num = (int)item["rank"],
-                                    Name = (string)item["movieNm"],
-                                    ODate = (string)item["openDt"],
-                                    TEarn = coTEarn,
-                                    Pct = coPct,
-                                    TAud = coTAud
-                                });
+                                    date = Date,
+                                    log = MvJson
+                                };
+
+                                context.Movies_Logs.Add(Movies_Log);
+                                context.SaveChanges();
+
+                                foreach (var item in dailyBoxOfficeList)
+                                {
+                                    long coTEarn = Convert.ToInt64(item["salesAcc"]);
+                                    double coPct = Convert.ToDouble(item["salesShare"]);
+                                    long coTAud = Convert.ToInt64(item["audiAcc"]);
+
+                                    Movies.Add(new MovieModel()
+                                    {
+                                        Num = (int)item["rank"],
+                                        Name = (string)item["movieNm"],
+                                        ODate = (string)item["openDt"],
+                                        TEarn = coTEarn,
+                                        Pct = coPct,
+                                        TAud = coTAud
+                                    });
+                                }
                             }
                         }
                     }
@@ -401,6 +414,7 @@ namespace MovieViews.ViewModels
 
             AddMovie();
         }
+        
 
         /// <summary>
         /// 요청한 날의 박스오피스 날짜 string 포맷팅하는 부분
