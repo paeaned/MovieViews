@@ -9,6 +9,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Xml;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace MovieViews.ViewModels
 {
@@ -127,6 +128,28 @@ namespace MovieViews.ViewModels
                 using (SqlConnection conn = new SqlConnection(constr))
                 {
                     conn.Open();
+
+                    /// <summary>
+                    /// Linq 사용해서 DB와 연결
+                    /// </summary>
+                    using (var context = new MoviesViewEntities())
+                    {
+                        /// <summary>
+                        /// SQL 버전 > 꺼내쓰기 log[0].log 요런식으로 사용
+                        /// </summary>
+                        var log = (from x in context.Movies_Logs
+                                  where x.date == Date
+                                  select x).ToList();
+
+                        /// <summary>
+                        /// 람다 버전 > 꺼내는 방법 동일
+                        /// </summary>
+                        var logs = context.Movies_Logs
+                            .Where(x => x.date == Date)
+                            .ToList();
+
+                        System.Diagnostics.Trace.WriteLine("dd: " + logs);
+                    }
 
                     using (SqlDataAdapter adapter = new SqlDataAdapter("SELECT * FROM [dbo].[Movies.Logs] WHERE date = @_date", conn))
                     {

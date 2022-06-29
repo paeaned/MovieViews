@@ -38,6 +38,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -56,8 +58,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Models\MovieDbContext.cs" />
     <Compile Include="Models\MovieModel.cs" />
+    <Compile Include="MovieDbModel.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MovieDbModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="MovieDbModel.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MovieDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="MovieDbModel.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MovieDbModel.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Movies_Logs.cs">
+      <DependentUpon>MovieDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\DelegateCommand.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\Notifier.cs" />
@@ -92,6 +111,13 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EntityDeploy Include="MovieDbModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>MovieDbModel.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="MovieDbModel.edmx.diagram">
+      <DependentUpon>MovieDbModel.edmx</DependentUpon>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -116,6 +142,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="ApiKey.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="MovieDbModel.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>MovieDbModel.edmx</DependentUpon>
+      <LastGenOutput>MovieDbModel.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="MovieDbModel.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>MovieDbModel.edmx</DependentUpon>
+      <LastGenOutput>MovieDbModel.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
