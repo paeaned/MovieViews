@@ -73,7 +73,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="점유율" Width="1.5*"
-                                    Binding="{Binding Pct}">
+                                    Binding="{Binding Pct, StringFormat={}{0}%}">
                     <DataGridTextColumn.HeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
