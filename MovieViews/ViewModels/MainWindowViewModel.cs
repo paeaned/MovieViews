@@ -71,7 +71,7 @@ namespace MovieViews.ViewModels
         }
 
         /// <summary>
-        /// 메인 윈도우 시동시 작동하는 것??
+        /// 메인 윈도우 생성자
         /// </summary>
         public MainWindowViewModel()
         {
