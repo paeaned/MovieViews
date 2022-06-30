@@ -1,16 +1,16 @@
 ﻿using MovieViews.Models;
-using System;
-using System.IO;
-using System.Collections.ObjectModel;
 using Newtonsoft.Json.Linq;
-using System.Net;
-using System.Windows.Input;
+using System;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Windows;
+using System.Windows.Input;
 using System.Xml;
 using System.Xml.Linq;
-using System.Linq;
-using System.Windows;
 
 namespace MovieViews.ViewModels
 {
@@ -56,12 +56,6 @@ namespace MovieViews.ViewModels
             }
             return ApiKey;
         }
-
-        static int CalDate(DateTime newDate)
-        {
-            int result = DateTime.Compare(DateTime.Now, newDate);
-            return result;
-        }
         
         /// <summary>
         /// API 연동주소 생성 메소드
@@ -76,14 +70,11 @@ namespace MovieViews.ViewModels
             return result;
         }
 
-        MovieModel movie = null;
-
         /// <summary>
         /// 메인 윈도우 시동시 작동하는 것??
         /// </summary>
         public MainWindowViewModel()
         {
-            movie = new MovieModel();
             AddMovie();
 
             CuDate = ChangeDate(Date);
@@ -141,8 +132,8 @@ namespace MovieViews.ViewModels
                     /// SQL 버전 > .ToList() 쓴 다음에 꺼내쓸때 log[0].log 요런식으로 사용
                     /// </summary>
                     var log = from x in context.Movies_Logs
-                                where x.date == Date
-                                select x;
+                              where x.date == Date
+                              select x;
 
 
                     /// <summary>
@@ -150,7 +141,6 @@ namespace MovieViews.ViewModels
                     /// </summary>
                     // var logs = context.Movies_Logs
                     //     .Where(x => x.date == Date)
-                    //     .ToList();
 
                     /// <summary>
                     /// Count()를 쓰려면 ToList() 쓰면 안됨
@@ -172,11 +162,12 @@ namespace MovieViews.ViewModels
                             var obj = JObject.Parse(data);
 
                             MvJson = Convert.ToString(obj);
-                            
-                            if (obj["boxOfficeResult"]["dailyBoxOfficeList"].Count() == 0)
+
+                            if (!obj["boxOfficeResult"]["dailyBoxOfficeList"].Any())
                             {
                                 MessageBox.Show("영화 정보가 없습니다.");
-                            } else
+                            }
+                            else
                             {
                                 /// <summary>
                                 /// Linq Insert 구문을 사용해서 DB에 Insert 작업 시행하는 부분
@@ -199,7 +190,7 @@ namespace MovieViews.ViewModels
                         /// DB에서 가저온 데이터를 파싱해서 영화 정보를 모델리스트에 추가하는 부분
                         /// </summary>
                         var data = log.ToList()[0].log;
-                        var obj = JObject.Parse((string)data);
+                        var obj = JObject.Parse(data);
 
                         AddMovieModel(obj);
                     }
@@ -337,7 +328,7 @@ namespace MovieViews.ViewModels
         {
             get { return (this.preDateCommand ?? (this.preDateCommand = new DelegateCommand(PreDate))); }
         }
-        
+
         private void PreDate()
         {
             if (Movies.Count != 0)
@@ -374,7 +365,7 @@ namespace MovieViews.ViewModels
 
             AddMovie();
         }
-        
+
 
         /// <summary>
         /// 요청한 날의 박스오피스 날짜 string 포맷팅하는 부분
@@ -412,5 +403,5 @@ namespace MovieViews.ViewModels
                 });
             }
         }
-    }   
+    }
 }

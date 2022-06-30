@@ -133,6 +133,11 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp">
+      <Version>8.40.0.48530</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="SQLite">
       <Version>3.13.0</Version>
     </PackageReference>
